@@ -4,8 +4,9 @@ import { useRouter } from 'expo-router';
 import { User, TrendingUp, CheckCircle, Clock, ChevronRight, BookOpen, Plus, LogOut as LeaveIcon } from 'lucide-react-native';
 import { classroomService } from '../../services/classroomService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ProfileAvatar from '@/components/profileAvatar';
 
-const CLASSROOM_KEY = 'current_classroom_id';
+const CLASSROOM_KEY = 'SNFMC37EflogtvFyX8wj';
 
 export default function HomePage() {
   const router = useRouter();
@@ -114,9 +115,9 @@ export default function HomePage() {
     } catch (error: any) {
       console.error('Error joining classroom:', error);
       if (Platform.OS === 'web') {
-        alert(error.response?.data?.message || 'Failed to join classroom. Please check the class code.');
+        alert(error.response?.data?.message || 'Failed to join classroom');
       } else {
-        Alert.alert('Error', error.response?.data?.message || 'Failed to join classroom. Please check the class code.');
+        Alert.alert('Error', error.response?.data?.message || 'Failed to join classroom.');
       }
     } finally {
       setJoiningClass(false);
@@ -214,202 +215,133 @@ export default function HomePage() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-white">
+      {/* Header */}
+      <View className="bg-blue-600 px-6 pt-4 pb-6">
+        <View className="flex-row justify-between items-center mb-4">
+          <View className="flex-row items-center gap-3">
+            <ProfileAvatar size={48} iconSize={24} borderColor="transparent" showBorder={false} />
+            <View>
+              <Text className="text-sm text-white font-medium">Mobile Dev</Text>
+              <Text className="text-xs text-white/80">Welcome Back! {userName}</Text>
+            </View>
+          </View>
+          <TouchableOpacity className="p-2 bg-white/20 rounded-lg">
+            <Text className="text-white">⚙️</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Stats Row */}
+        <View className="flex-row gap-3">
+          <View className="flex-1 bg-white rounded-xl p-3 items-center">
+            <BookOpen size={20} color="#16a34a" />
+            <Text className="text-xl font-bold text-gray-800 mt-1">{materials.length}</Text>
+            <Text className="text-xs text-gray-600">Classes</Text>
+          </View>
+          <View className="flex-1 bg-white rounded-xl p-3 items-center">
+            <Text className="text-xl">🔔</Text>
+            <Text className="text-xl font-bold text-gray-800 mt-1">{pendingAssignments}</Text>
+            <Text className="text-xs text-gray-600">Notifications</Text>
+          </View>
+        </View>
+      </View>
+
       <ScrollView
-        className="flex-1 px-6 pt-6"
+        className="flex-1"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Header Card */}
-        <View className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 mb-6 shadow-lg">
-          <View className="flex-row justify-between items-center mb-4">
-            <View className="flex-row items-center gap-3">
-              <View className="w-12 h-12 bg-white/20 rounded-full items-center justify-center">
-                <User size={24} color="white" />
-              </View>
-              <View>
-                <Text className="text-sm text-white/90">Welcome Back!</Text>
-                <Text className="text-xl font-bold text-white capitalize">{userName}</Text>
-              </View>
-            </View>
-            <TouchableOpacity className="p-2 bg-white/20 rounded-xl">
-              <Text className="text-white">🔔</Text>
-            </TouchableOpacity>
+        {/* My Class Section */}
+        <View className="px-6 py-4">
+          <View className="flex-row justify-between items-center mb-3">
+            <Text className="text-base font-bold text-gray-800">My Class</Text>
+            <Text className="text-sm text-gray-600">{materials.length} Class</Text>
           </View>
 
-          <View className="flex-row gap-4 mt-6">
-            <View className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-4 items-center">
-              <BookOpen size={24} color="white" />
-              <Text className="text-2xl font-bold text-white mt-2">
-                {materials.length}
-              </Text>
-              <Text className="text-xs text-white/90">Materials</Text>
-            </View>
-            <View className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-4 items-center">
-              <CheckCircle size={24} color="white" />
-              <Text className="text-2xl font-bold text-white mt-2">
-                {completedAssignments}
-              </Text>
-              <Text className="text-xs text-white/90">Completed</Text>
-            </View>
-            <View className="flex-1 bg-white/10 backdrop-blur-sm rounded-xl p-4 items-center">
-              <Clock size={24} color="white" />
-              <Text className="text-2xl font-bold text-white mt-2">
-                {pendingAssignments}
-              </Text>
-              <Text className="text-xs text-white/90">Pending</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* My Classroom */}
-        <View className="mb-6">
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-bold text-gray-800">My Classroom</Text>
-            <View className="flex-row gap-2">
-              <TouchableOpacity
-                onPress={() => setShowJoinModal(true)}
-                className="px-3 py-2 bg-blue-100 rounded-lg flex-row items-center gap-1"
-              >
-                <Plus size={16} color="#2563eb" />
-                <Text className="text-blue-600 font-semibold text-xs">Join New</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleLeaveClassroom}
-                className="px-3 py-2 bg-red-100 rounded-lg flex-row items-center gap-1"
-              >
-                <LeaveIcon size={16} color="#dc2626" />
-                <Text className="text-red-600 font-semibold text-xs">Leave</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
+          {/* Class Card */}
           {classroomDetails ? (
-            <TouchableOpacity
-              onPress={() => router.push('/class/courseDetailPage')}
-              className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100"
-            >
-              <View className="flex-row justify-between items-center mb-3">
-                <View className="flex-1">
-                  <Text className="text-lg font-semibold text-gray-800 mb-2">
-                    {classroomDetails.name || 'Mobile Development'}
-                  </Text>
-                  <View className="flex-row items-center mb-3">
-                    <User size={16} color="#6b7280" />
-                    <Text className="text-sm text-gray-500 ml-1">
-                      {classroomDetails.teacher || classroomDetails.teacherName || 'Instructor'}
-                    </Text>
-                  </View>
-                  
-                  {classroomDetails.description && (
-                    <Text className="text-sm text-gray-600 mb-3" numberOfLines={2}>
-                      {classroomDetails.description}
-                    </Text>
-                  )}
-
-                  <View className="flex-row items-center gap-4">
-                    <View className="flex-row items-center">
-                      <BookOpen size={16} color="#2563eb" />
-                      <Text className="text-sm text-blue-600 font-medium ml-1">
-                        {materials.length} Materials
-                      </Text>
-                    </View>
-                    <View className="flex-row items-center">
-                      <CheckCircle size={16} color="#10b981" />
-                      <Text className="text-sm text-green-600 font-medium ml-1">
-                        {assignments.length} Tasks
-                      </Text>
-                    </View>
-                  </View>
+            <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-200 shadow-sm">
+              <TouchableOpacity
+                onPress={() => router.push('/class/courseDetailPage')}
+              >
+                <Text className="text-base font-semibold text-gray-800 mb-1">
+                  {classroomDetails.name || 'Mobile Development'}
+                </Text>
+                <Text className="text-xs text-gray-500 mb-2">
+                  Class Code: {currentClassroomId || 'MB141'}
+                </Text>
+                <Text className="text-xs text-gray-600 mb-3">
+                  Teacher: {classroomDetails.teacher || classroomDetails.teacherName || 'Mrs. Veneat'}
+                </Text>
+              </TouchableOpacity>
+              
+              <View className="flex-row justify-between items-center">
+                <View className="flex-row gap-2">
+                  <TouchableOpacity 
+                    onPress={() => router.push('/class/tasksPage')}
+                    className="flex-row items-center gap-1 bg-orange-50 px-3 py-1.5 rounded-lg"
+                  >
+                    <BookOpen size={14} color="#ea580c" />
+                    <Text className="text-xs text-orange-600 font-medium">Assignments</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={() => router.push('/class/gradesPage')}
+                    className="flex-row items-center gap-1 bg-red-50 px-3 py-1.5 rounded-lg"
+                  >
+                    <TrendingUp size={14} color="#dc2626" />
+                    <Text className="text-xs text-red-600 font-medium">Grades</Text>
+                  </TouchableOpacity>
                 </View>
-                <ChevronRight size={24} color="#9ca3af" />
+                <TouchableOpacity 
+                  onPress={handleLeaveClassroom}
+                  className="flex-row items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg"
+                >
+                  <LeaveIcon size={14} color="#6b7280" />
+                  <Text className="text-xs text-gray-600 font-medium">Leave</Text>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+            </View>
           ) : (
-            <View className="bg-white rounded-2xl p-6 items-center border border-gray-100">
+            <View className="bg-white rounded-2xl p-6 items-center border border-gray-200">
               <Text className="text-gray-500">No classroom data available</Text>
             </View>
           )}
         </View>
 
-        {/* Quick Actions */}
-        <View className="mb-6">
-          <Text className="text-xl font-bold text-gray-800 mb-4">Quick Actions</Text>
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              onPress={() => router.push('/class/courseDetailPage')}
-              className="flex-1 bg-blue-50 rounded-2xl p-4 items-center border border-blue-100"
-            >
-              <BookOpen size={32} color="#2563eb" />
-              <Text className="text-sm font-semibold text-blue-600 mt-2">
-                View Materials
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push('/class/tasksPage')}
-              className="flex-1 bg-orange-50 rounded-2xl p-4 items-center border border-orange-100"
-            >
-              <CheckCircle size={32} color="#ea580c" />
-              <Text className="text-sm font-semibold text-orange-600 mt-2">
-                My Tasks
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Recent Activity */}
-        {assignments.length > 0 && (
-          <View className="mb-6">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold text-gray-800">Recent Tasks</Text>
-              <TouchableOpacity onPress={() => router.push('/class/tasksPage')}>
-                <Text className="text-blue-600 font-medium text-sm">View All</Text>
-              </TouchableOpacity>
-            </View>
-
-            {assignments.slice(0, 3).map((assignment, index) => (
-              <View
-                key={assignment.id || index}
-                className="bg-white rounded-2xl p-4 mb-3 border border-gray-100"
-              >
-                <Text className="font-semibold text-gray-800 mb-1">
-                  {assignment.title}
-                </Text>
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-sm text-gray-500">
-                    {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No due date'}
-                  </Text>
-                  <View
-                    className={`px-3 py-1 rounded-full ${
-                      assignment.status === 'completed'
-                        ? 'bg-green-100'
-                        : assignment.status === 'overdue'
-                        ? 'bg-red-100'
-                        : 'bg-blue-100'
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-medium ${
-                        assignment.status === 'completed'
-                          ? 'text-green-600'
-                          : assignment.status === 'overdue'
-                          ? 'text-red-600'
-                          : 'text-blue-600'
-                      }`}
-                    >
-                      {assignment.status === 'completed'
-                        ? 'Completed'
-                        : assignment.status === 'overdue'
-                        ? 'Overdue'
-                        : 'Pending'}
-                    </Text>
-                  </View>
+        {/* Today's Task Banner */}
+        {pendingAssignments > 0 && (
+          <View className="px-6 mb-4">
+            <View className="bg-blue-600 rounded-2xl p-4 flex-row justify-between items-center">
+              <View className="flex-row items-center gap-2">
+                <Clock size={20} color="white" />
+                <View>
+                  <Text className="text-white font-semibold">Today's Task</Text>
+                  <Text className="text-white/80 text-xs">{pendingAssignments} Assignments Due</Text>
                 </View>
               </View>
-            ))}
+              <ChevronRight size={20} color="white" />
+            </View>
           </View>
         )}
+
+        {/* Action Buttons */}
+        <View className="px-6 pb-6 flex-row gap-3">
+          <TouchableOpacity
+            onPress={() => setShowJoinModal(true)}
+            className="flex-1 bg-green-600 rounded-2xl py-4 flex-row items-center justify-center gap-2"
+          >
+            <Plus size={20} color="white" />
+            <Text className="text-white font-bold">Join Class</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push('/class/tasksPage')}
+            className="flex-1 bg-blue-600 rounded-2xl py-4 flex-row items-center justify-center gap-2"
+          >
+            <CheckCircle size={20} color="white" />
+            <Text className="text-white font-bold">Assignments</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Join Classroom Modal */}
@@ -447,7 +379,7 @@ function JoinClassroomModal({ visible, onClose, classCode, setClassCode, onJoin,
             <TextInput
               value={classCode}
               onChangeText={setClassCode}
-              placeholder="e.g., 3V6P6N"
+              placeholder="3V6P6N"
               autoCapitalize="characters"
               className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-lg font-bold text-center tracking-widest"
               editable={!loading}

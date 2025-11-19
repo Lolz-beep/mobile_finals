@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
-import { FileText, Clock } from 'lucide-react-native';
+import { User, FileText, Clock } from 'lucide-react-native';
 import { classroomService, Assignment } from '../../services/classroomService';
+import ProfileAvatar from '@/components/profileAvatar';
 
 const CLASSROOM_ID = 'SNFMC37EflogtvFyX8wj';
 
@@ -42,15 +43,23 @@ export default function TasksPage() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView
-        className="flex-1 px-6 pt-6"
-        refreshControl={
+      <ScrollView refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <View className="bg-orange-600 rounded-3xl p-6 mb-6">
-          <Text className="text-2xl font-bold text-white mb-2">Assignments</Text>
-          <Text className="text-white/80">Keep track of your tasks</Text>
+        <View className="bg-blue-600 px-4 py-6 mb-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <ProfileAvatar size={48} iconSize={24} borderColor="transparent" showBorder={false} />
+              <View>
+                <Text className="text-white font-semibold text-base">Mobile Dev</Text>
+                <Text className="text-white/90 text-sm">Welcome Back! Student</Text>
+              </View>
+            </View>
+            <View className="w-8 h-8 bg-white/20 rounded-lg items-center justify-center">
+              <Text className="text-white text-lg">⚙️</Text>
+            </View>
+          </View>
         </View>
 
         {assignments.length > 0 ? (

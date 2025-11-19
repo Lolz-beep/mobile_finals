@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, SafeAreaView, Alert, Platform } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, SafeAreaView, Alert, Platform, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { User, LogOut } from 'lucide-react-native';
+import { User, LogOut, Camera, Image as ImageIcon } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -10,12 +11,28 @@ export default function ProfilePage() {
     name: '',
     username: '',
     email: '',
-    phone: ''
+    phone: '',
+    profileImage: ''
   });
 
   useEffect(() => {
     loadUserData();
+    requestPermissions();
   }, []);
+
+  const requestPermissions = async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to change your profile picture!');
+      }
+      
+      const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+      if (cameraStatus.status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos!');
+      }
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -26,7 +43,8 @@ export default function ProfilePage() {
           name: userData.displayName || userData.name || '',
           username: userData.email?.split('@')[0] || '',
           email: userData.email || '',
-          phone: userData.phoneNumber || userData.phone || ''
+          phone: userData.phoneNumber || userData.phone || '',
+          profileImage: userData.profileImage || ''
         });
       }
     } catch (error) {
@@ -34,15 +52,89 @@ export default function ProfilePage() {
     }
   };
 
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        setProfile({ ...profile, profileImage: imageUri });
+        
+        // Save to AsyncStorage immediately
+        const user = await AsyncStorage.getItem('user');
+        if (user) {
+          const userData = JSON.parse(user);
+          const updatedUser = {
+            ...userData,
+            profileImage: imageUri
+          };
+          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      if (Platform.OS === 'web') {
+        alert('Failed to pick image. Please try again.');
+      } else {
+        Alert.alert('Error', 'Failed to pick image. Please try again.');
+      }
+    }
+  };
+
+  const takePhoto = async () => {
+    try {
+      // Request camera permission first
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission Denied', 'Camera permission is required to take photos.');
+          return;
+        }
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        setProfile({ ...profile, profileImage: imageUri });
+        
+        // Save to AsyncStorage immediately
+        const user = await AsyncStorage.getItem('user');
+        if (user) {
+          const userData = JSON.parse(user);
+          const updatedUser = {
+            ...userData,
+            profileImage: imageUri
+          };
+          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      if (Platform.OS === 'web') {
+        alert('Camera is not available on web. Please use the library option.');
+      } else {
+        Alert.alert('Error', 'Failed to take photo. Please try again.');
+      }
+    }
+  };
+
   const handleSignOut = () => {
     if (Platform.OS === 'web') {
-      // For web, use native confirm
       const confirmed = window.confirm('Are you sure you want to sign out?');
       if (confirmed) {
         performSignOut();
       }
     } else {
-      // For mobile, use Alert
       Alert.alert(
         'Sign Out',
         'Are you sure you want to sign out?',
@@ -65,19 +157,15 @@ export default function ProfilePage() {
     try {
       console.log('Signing out...');
       
-      // Clear all auth data
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('user');
       await AsyncStorage.clear();
       
       console.log('Auth data cleared, navigating to index...');
       
-      // Try multiple navigation methods
       if (Platform.OS === 'web') {
-        // For web, use window.location
         window.location.href = '/';
       } else {
-        // For mobile, use router.replace
         router.replace('/');
       }
     } catch (error) {
@@ -94,7 +182,8 @@ export default function ProfilePage() {
         const updatedUser = {
           ...userData,
           displayName: profile.name,
-          phoneNumber: profile.phone
+          phoneNumber: profile.phone,
+          profileImage: profile.profileImage
         };
         await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
         
@@ -118,14 +207,43 @@ export default function ProfilePage() {
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView className="flex-1 px-6 pt-6">
         {/* Profile Header */}
-        <View className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 mb-6 items-center shadow-lg">
-          <View className="w-24 h-24 bg-white/20 rounded-full items-center justify-center mb-4">
-            <User size={48} color="white" />
+        <View className="bg-blue-600 rounded-3xl p-6 mb-6 shadow-lg relative">
+          <View className="items-center">
+            <View className="mb-4">
+              {profile.profileImage ? (
+                <Image 
+                  source={{ uri: profile.profileImage }}
+                  className="w-24 h-24 rounded-full"
+                  style={{ width: 96, height: 96, borderRadius: 48 }}
+                />
+              ) : (
+                <View className="w-24 h-24 bg-white/20 rounded-full items-center justify-center">
+                  <User size={48} color="white" />
+                </View>
+              )}
+            </View>
+            
+            <Text className="text-2xl font-bold text-white mb-1">
+              {profile.name || profile.username || 'Student'}
+            </Text>
+            <Text className="text-white/80">@{profile.username || 'user'}</Text>
           </View>
-          <Text className="text-2xl font-bold text-white mb-1">
-            {profile.name || profile.username || 'Student'}
-          </Text>
-          <Text className="text-white/80">@{profile.username || 'user'}</Text>
+          
+          <View className="absolute bottom-6 right-6 flex-row gap-3" style={{ position: 'absolute', bottom: 24, right: 24 }}>
+            <TouchableOpacity 
+              onPress={pickImage}
+              className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-md"
+            >
+              <ImageIcon size={20} color="#2563eb" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              onPress={takePhoto}
+              className="w-10 h-10 bg-white rounded-full items-center justify-center shadow-md"
+            >
+              <Camera size={20} color="#2563eb" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Profile Form */}
