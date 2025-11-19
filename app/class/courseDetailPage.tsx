@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, FileText, Settings } from 'lucide-react-native';
 import { classroomService } from '../../services/classroomService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ProfileAvatar from '../../components/profileAvatar';
 
 const CLASSROOM_KEY = 'SNFMC37EflogtvFyX8wj';
 
@@ -96,9 +97,7 @@ export default function CourseDetailPage() {
       <View className="bg-blue-600 px-6 pt-4 pb-6">
         <View className="flex-row justify-between items-center mb-4">
           <View className="flex-row items-center gap-3">
-            <View className="w-12 h-12 bg-white rounded-full items-center justify-center">
-              <Text className="text-2xl">👨‍💻</Text>
-            </View>
+            <ProfileAvatar size={48} iconSize={24} borderColor="transparent" showBorder={false} />
             <View>
               <Text className="text-sm text-white font-medium">Mobile Dev</Text>
               <Text className="text-xs text-white/80">Welcome Back! Student</Text>
