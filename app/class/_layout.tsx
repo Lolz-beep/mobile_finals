@@ -51,6 +51,12 @@ export default function ClassLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="assignmentDetail"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

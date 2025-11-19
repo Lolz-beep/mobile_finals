@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
 import { User, FileText, Clock } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { classroomService, Assignment } from '../../services/classroomService';
 import ProfileAvatar from '@/components/profileAvatar';
 
 const CLASSROOM_ID = 'SNFMC37EflogtvFyX8wj';
 
 export default function TasksPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -31,6 +33,10 @@ export default function TasksPage() {
   const onRefresh = () => {
     setRefreshing(true);
     loadAssignments();
+  };
+
+  const handleViewAssignment = (assignmentId: string) => {
+    router.push(`/class/assignmentDetail?id=${assignmentId}`);
   };
 
   if (loading) {
@@ -64,7 +70,7 @@ export default function TasksPage() {
 
         {assignments.length > 0 ? (
           assignments.map((assignment) => (
-            <View key={assignment.id} className="bg-white rounded-2xl p-5 mb-3 border border-gray-100">
+            <View key={assignment.id} className="bg-white rounded-2xl p-5 mx-4 mb-3 border border-gray-100">
               <View className="flex-row justify-between items-start">
                 <View className="flex-1">
                   <View className="flex-row items-center gap-2 mb-2">
@@ -108,14 +114,17 @@ export default function TasksPage() {
                   </View>
                 </View>
 
-                <TouchableOpacity className="px-4 py-2 bg-blue-600 rounded-lg">
+                <TouchableOpacity 
+                  onPress={() => handleViewAssignment(assignment.id)}
+                  className="px-4 py-2 bg-blue-600 rounded-lg"
+                >
                   <Text className="text-white text-sm font-medium">View</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ))
         ) : (
-          <View className="bg-white rounded-2xl p-6 items-center">
+          <View className="bg-white rounded-2xl p-6 mx-4 items-center">
             <Text className="text-gray-500">No assignments available</Text>
           </View>
         )}
